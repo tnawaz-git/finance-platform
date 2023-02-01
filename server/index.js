@@ -1,9 +1,50 @@
-const express = require("express")
-const app = express()
-require("dotenv").config()
-const stripe = require("stripe")(process.env.STRIPE_SECRET_TEST)
-const bodyParser = require("body-parser")
-const cors = require("cors")
+const express = require("express");
+const app = express();
+require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_TEST);
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const express = require('express');
+const mongoose = require('mongoose');
+
+
+const isAdmin = (req, res, next) => {
+  if (req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(401).send({ message: 'Unauthorized' });
+  }
+};
+
+app.get('/admin', isAdmin, (req, res) => {
+  res.send({ message: 'Welcome to the admin panel' });
+});
+
+const Transaction = mongoose.model('Transaction', {
+  amount: Number,
+  userId: String,
+  fee: Number
+});
+
+app.post('/transactions', async (req, res) => {
+  const { amount, userId } = req.body;
+  const fee = amount * 0.05; // 5% transaction fee
+  const transaction = new Transaction({ amount: amount + fee, userId, fee });
+  await transaction.save();
+  res.send({ message: 'Transaction created' });
+});
+
+app.get('/transactions', async (req, res) => {
+  const transactions = await Transaction.find();
+  res.send(transactions);
+});
+
+mongoose.connect('mongodb://localhost:27017/transactions', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+
 
 const transferMoney = async (senderId, receiverId, amount) => {
   // Find the sender and receiver in the database
