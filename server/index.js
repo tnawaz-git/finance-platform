@@ -6,6 +6,53 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const express = require('express');
 const mongoose = require('mongoose');
+const request = require('request');
+
+const axios = require('axios');
+
+//get API key from Alpha Vantage, example symbol Apple Inc: 'AAPL'
+const getStockData = async (req,res,next) => {
+  var symbol = req.body.symbol; 
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=<YOUR_API_KEY>`;
+  const response = await axios.get(url);
+  const stockData = response.data['Global Quote'];
+  return stockData;
+}
+
+//implementation for buying stocks
+const robinAccessToken = 'your_access_token';
+const symbol = 'AAPL';
+const shares = 10;
+const price = 200;
+
+const robinUrl = `https://api.robinhood.com/orders/`;
+
+const options = {
+  method: 'POST',
+  url: robinUrl,
+  headers: {
+    'Authorization': `Bearer ${robinAccessToken}`
+  },
+  form: {
+    'account': 'your_account_number',
+    'instrument': `https://api.robinhood.com/instruments/${symbol}/`,
+    'price': price,
+    'quantity': shares,
+    'side': 'buy',
+    'time_in_force': 'gtc',
+    'type': 'limit'
+  }
+};
+
+request(options, (error, response, body) => {
+  if (error) {
+    return console.error('Request failed:', error);
+  }
+  
+  console.log('Order status:', response.statusCode);
+  console.log('Order response:', body);
+});
+
 
 
 const isAdmin = (req, res, next) => {
