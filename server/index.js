@@ -10,6 +10,40 @@ const request = require('request');
 
 const axios = require('axios');
 
+//to buy stock using drivewealth API
+async function buyStockDriveWealth(symbol, shares, price) {
+  try {
+    const response = await axios.post(`https://api.drivewealth.com/v1/orders`, {
+      symbol: symbol,
+      side: 'buy',
+      qty: shares,
+      type: 'limit',
+      limitPrice: price,
+      timeInForce: 'gtc'
+    }, {
+      headers: {
+        'Authorization': `Bearer YOUR_API_KEY`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+//getting stock data using Polygon
+async function getStockData(symbol) {
+  try {
+    const response = await axios.get(`https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/2021-01-01/2022-01-01?apiKey=YOUR_API_KEY`);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+
 //get API key from Alpha Vantage, example symbol Apple Inc: 'AAPL'
 const getStockData = async (req,res,next) => {
   var symbol = req.body.symbol; 
@@ -19,7 +53,7 @@ const getStockData = async (req,res,next) => {
   return stockData;
 }
 
-//implementation for buying stocks
+//implementation for buying stocks from Robinhood
 const robinAccessToken = 'your_access_token';
 const symbol = 'AAPL';
 const shares = 10;
